@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4f3f1" />
+  <title>Caja &amp; Cocina — Libro Mayor Gastronómico</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- MOBILE HEADER (ONLY VISIBLE <= 860px) -->
+  <header class="mobile-bar">
+    <button type="button" class="btn btn-sm" id="btnMobileMenuOpen" aria-label="Abrir menú de navegación">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2 4h12M2 8h12M2 12h12" stroke-linecap="round" />
+      </svg>
+      <span>Menú</span>
+    </button>
+    <span class="mobile-bar-title">Caja &amp; Cocina</span>
+    <button type="button" class="btn btn-sm" id="btnMobileSync" aria-label="Sincronizar datos">
+      <span>Nube</span>
+    </button>
+  </header>
+
+  <div class="app">
+    <!-- OPEN PLANE SIDEBAR -->
+    <aside class="sidebar" id="appSidebar" aria-label="Navegación principal">
+      <div class="brand-row">
+        <div class="brand-mark-wrap">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 2L14 13H2L8 2Z" stroke-linejoin="round" />
+              <circle cx="8" cy="9.5" r="1" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">Caja &amp; Cocina</div>
+            <span class="brand-scope">Pizzas, minutas y bebidas</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm menu-toggle" id="btnMobileMenuClose" aria-label="Cerrar menú" style="display:none">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- OPERATOR SWITCHER -->
+      <div class="operator-box">
+        <div class="operator-box-label">
+          <span>Operador en turno</span>
+          <span id="activeOperatorBadge" class="num">Jonatan</span>
+        </div>
+        <div class="segmented" role="group" aria-label="Seleccionar operador" style="width:100%; display:flex;">
+          <button type="button" class="op-switch-btn" data-operator="Jonatan" aria-pressed="true" style="flex:1">Jonatan</button>
+          <button type="button" class="op-switch-btn" data-operator="Benja" aria-pressed="false" style="flex:1">Benja</button>
+        </div>
+      </div>
+
+      <p class="group-label">Operación diaria</p>
+      <button type="button" class="nav-item" data-screen="screen-overview" aria-current="page">
+        <span class="nav-item-left">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            <rect x="2" y="2.5" width="12" height="11" rx="1.5" />
+            <path d="M5 6h6M5 9.5h4" stroke-linecap="round" />
+          </svg>
+          <span>Caja y tandas</span>
+        </span>
+      </button>
+
+      <button type="button" class="nav-item" data-screen="screen-expenses">
+        <span class="nav-item-left">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M2.5 5h11M2.5 11h11M4 2.5v11M12 2.5v11" stroke-linecap="round" />
+          </svg>
+          <span>Gastos, casa e iglesia</span>
+        </span>
+      </button>
+
+      <button type="button" class="nav-item" data-screen="screen-costs">
+        <span class="nav-item-left">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M3 13L13 3M5.5 4.5h.01M10.5 11.5h.01" stroke-linecap="round" />
+            <circle cx="5.5" cy="4.5" r="1.5" />
+            <circle cx="10.5" cy="11.5" r="1.5" />
+          </svg>
+          <span>Insumos y recetas</span>
+        </span>
+      </button>
+
+      <button type="button" class="nav-item" data-screen="screen-notes">
+        <span class="nav-item-left">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M3 4.5h10M3 8h10M3 11.5h6" stroke-linecap="round" />
+          </svg>
+          <span>Compras y tareas</span>
+        </span>
+        <span class="nav-count" id="navPendingCount">4</span>
+      </button>
+
+      <p class="group-label">Análisis</p>
+      <button type="button" class="nav-item" data-screen="screen-advisor">
+        <span class="nav-item-left">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M2.5 12.5l3.5-4 2.5 2.5 5-6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Consultor y cuotas</span>
+        </span>
+      </button>
+
+      <div class="sidebar-bottom">
+        <div class="user-Badge-row">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="avatar-initial" title="Jonatan">J</span>
+            <span class="avatar-initial partner" title="Benja">B</span>
+            <span>Jonatan y Benja</span>
+          </div>
+          <button type="button" class="btn btn-sm" id="btnOpenSyncModal">Sincronizar</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CANVAS -->
+    <main class="canvas">
+      <!-- TITLE ROW & PERIOD/DATE SCOPE -->
+      <div class="title-row">
+        <div>
+          <h1 id="screenTitle">Caja y tandas del día</h1>
+          <p class="sub" id="screenFinding">
+            Cargando estado de ventas, fondo de reposición y aportes a casa...
+          </p>
+        </div>
+        <div class="title-controls">
+          <div class="segmented" role="group" aria-label="Período de consulta">
+            <button type="button" class="period-btn" data-period="today" aria-pressed="true">Hoy</button>
+            <button type="button" class="period-btn" data-period="week" aria-pressed="false">7 días</button>
+            <button type="button" class="period-btn" data-period="month" aria-pressed="false">Mes</button>
+          </div>
+          <input type="date" id="activeDateInput" class="input" style="width: 148px;" aria-label="Fecha activa" />
+          <button type="button" class="btn" id="btnCopyWhatsapp">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+              <rect x="5" y="5" width="8.5" height="8.5" rx="1.5" />
+              <path d="M3 11V3.5A1.5 1.5 0 0 1 4.5 2H11" stroke-linecap="round" />
+            </svg>
+            <span>Copiar cierre</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HEADLINE KPI STRIP (1px DIVIDED, NO ICONS) -->
+      <section class="kpis" aria-label="Tres bolsillos y sostén familiar">
+        <div class="kpi">
+          <div class="kpi-label">Saldo libre en caja</div>
+          <div class="kpi-value lead-answer num" id="kpiNetFree">$0</div>
+          <div class="delta" id="kpiNetDelta">Disponible hoy tras gastos y casa</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Caja bruta vendida</div>
+          <div class="kpi-value sib-figure num" id="kpiGrossSales">$0</div>
+          <div class="delta" id="kpiGrossDelta">vs. meta diaria de $100.000</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Fondo de reposición</div>
+          <div class="kpi-value sib-figure num" id="kpiReplenishment">$0</div>
+          <div class="delta" id="kpiReplenishmentDelta">Intocable para reponer insumos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Aporte a Casa / Papá y Gastos</div>
+          <div class="kpi-value sib-figure num" id="kpiOperatingExp">$0</div>
+          <div class="delta" id="kpiOperatingDelta">Sostén familiar y gastos del local</div>
+        </div>
+      </section>
+
+      <!-- ==================================================================== -->
+      <!-- SCREEN 1: OVERVIEW (CAJA, TANDAS CADA 2 HS, TURNO SEVER, BOLSILLOS) -->
+      <!-- ==================================================================== -->
+      <div class="screen-view" id="screen-overview">
+        <!-- ROW 1: BOLSILLOS + SEVER (4 COLS) BESIDE TANDA BUILDER (8 COLS) -->
+        <div class="grid" style="margin-bottom: var(--gap);">
+          <div class="col-4 stack-col">
+            <!-- BOLSILLOS & ACUERDO IGLESIA TREE -->
+            <section class="panel" style="flex:1;" aria-labelledby="headBolsillos">
+              <header>
+                <h2 id="headBolsillos">Estado de bolsillos</h2>
+                <span class="meta" id="ledgerPeriodLabel">Hoy</span>
+              </header>
+              <div class="ledger-tree" id="ledgerTreeContainer">
+                <!-- Populated by JS -->
+              </div>
+            </section>
+
+            <!-- CALCULADORA DE TURNO SEVER -->
+            <section class="panel" aria-labelledby="headSever">
+              <header>
+                <h2 id="headSever">Pago por turno a Sever</h2>
+                <span class="pill" id="severDayStatusPill">Martes, vie, sáb, dom</span>
+              </header>
+              <p class="meta" id="severSuggestionCopy">
+                Tarifa sugerida según el volumen vendido en la fecha seleccionada.
+              </p>
+
+              <div class="sever-controls-row">
+                <span style="font-size: var(--fs-small); color: var(--muted);">Horas trabajadas</span>
+                <div class="stepper-group">
+                  <button type="button" class="step-btn" id="btnSeverMinus" aria-label="Menos media hora">−</button>
+                  <span class="step-qty num" id="severHoursDisplay">4</span>
+                  <button type="button" class="step-btn" id="btnSeverPlus" aria-label="Más media hora">+</button>
+                </div>
+              </div>
+
+              <div class="rate-pills" id="severRatesBar" role="group" aria-label="Tarifa por hora de Sever">
+                <button type="button" class="rate-btn" data-rate="3000" aria-pressed="false">$3.000/h</button>
+                <button type="button" class="rate-btn" data-rate="3500" aria-pressed="true">$3.500/h</button>
+                <button type="button" class="rate-btn" data-rate="4000" aria-pressed="false">$4.000/h</button>
+                <button type="button" class="rate-btn" data-rate="4500" aria-pressed="false">$4.500/h</button>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+                <div>
+                  <span class="meta">Total liquidación</span>
+                  <div class="money-bold num" style="font-size: 18px;" id="severTotalAmount">$14.000</div>
+                </div>
+                <button type="button" class="btn primary" id="btnCommitSeverPay">
+                  Registrar pago a Sever
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel col-8" aria-labelledby="headTandaBuilder">
+            <header>
+              <div>
+                <h2 id="headTandaBuilder">Anotar tanda de ventas</h2>
+                <p class="meta">Anotá cada 2 horas o al cierre. Congela el costo actual de cada producto.</p>
+              </div>
+              <div class="segmented" role="group" aria-label="Filtrar categoría de carta">
+                <button type="button" class="cat-filter-btn" data-cat="Comida" aria-pressed="true">Pizzas y minutas</button>
+                <button type="button" class="cat-filter-btn" data-cat="Pizzas" aria-pressed="false">Solo pizzas</button>
+                <button type="button" class="cat-filter-btn" data-cat="Bebidas" aria-pressed="false">Bebidas</button>
+                <button type="button" class="cat-filter-btn" data-cat="all" aria-pressed="false">Toda la carta</button>
+              </div>
+            </header>
+
+            <div class="product-counter-grid" id="productCounterGrid">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="tanda-commit-bar">
+              <div class="tanda-commit-totals">
+                <span>Seleccionado: <strong id="draftCountLabel" class="num">0 ítems</strong></span>
+                <span>Venta: <strong id="draftSaleSum" class="money-bold num">$0</strong></span>
+                <span>Costo: <strong id="draftCostSum" class="num">$0</strong></span>
+                <span>Limpio: <strong id="draftProfitSum" class="money-bold num">$0</strong></span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="draftNoteInput" class="input" style="width: 190px;" placeholder="Franja (ej. 20:00 a 22:00)" aria-label="Nota de la tanda" />
+                <button type="button" class="btn" id="btnResetDraft" disabled>Limpiar</button>
+                <button type="button" class="btn primary" id="btnSaveTanda" disabled>Guardar tanda</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ROW 2: WEEKLY CHART (5 COLS) BESIDE TODAY'S MOVEMENTS + SMART EXPENSE BAR (7 COLS) -->
+        <div class="grid">
+          <section class="panel col-5" aria-labelledby="headWeeklyChart">
+            <div class="chart-head">
+              <h2 id="headWeeklyChart">Ventas diarias vs. meta de $100k</h2>
+              <span class="meta">Últimos 7 días</span>
+            </div>
+            <div class="chart" id="weeklySalesChart" style="min-height: 310px;"></div>
+            <div class="rows" style="margin-top:auto; border-top:1px solid var(--rule); padding-top:6px;">
+              <div class="row">
+                <span class="meta">Promedio diario (7 días)</span>
+                <strong class="num" id="weeklyAvgFooter">$91.443</strong>
+              </div>
+              <div class="row">
+                <span class="meta">Total vendido ( últimos 7 días )</span>
+                <strong class="num" id="weeklySumFooter">$640.100</strong>
+              </div>
+              <div class="row" style="padding-bottom:0;">
+                <span class="meta">Jornadas sobre la meta de $100.000</span>
+                <span class="pill pos num" id="weeklyGoalDaysFooter">3 de 7 días</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel col-7" aria-labelledby="headTodayMovements">
+            <header>
+              <div>
+                <h2 id="headTodayMovements">Salida rápida y movimientos de la fecha</h2>
+                <p class="meta">Escribí monto y motivo (ej: "18000 remedios papá" o "12500 garrafa") y se clasifica solo</p>
+              </div>
+              <span class="pill" id="smartPreviewBadge">Auto-clasificador activo</span>
+            </header>
+
+            <!-- SMART 1-LINE EXPENSE INPUT (AUTO-CLASSIFIES WITHOUT DROPDOWN) -->
+            <form id="formQuickSmartExpense" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+              <input
+                type="text"
+                id="inputQuickSmartExpense"
+                class="input"
+                style="flex:1; min-width: 210px;"
+                placeholder="Ej: 15000 remedios papá / 22000 supermercado casa / 42000 10kg muzza"
+                aria-label="Anotar salida rápida con clasificación automática"
+                required
+              />
+              <button type="submit" class="btn primary">Anotar salida</button>
+            </form>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hora</th>
+                    <th>Tipo y categoría deducida</th>
+                    <th class="n hide-mobile">Reposición</th>
+                    <th class="n">Caja</th>
+                    <th class="n">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="todayMovementsTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- SCREEN 2: GASTOS, CASA/PAPÁ, ALQUILER, LUZ Y OFRENDAS (IGLESIA)      -->
+      <!-- ==================================================================== -->
+      <div class="screen-view" id="screen-expenses" hidden>
+        <div class="grid top">
+          <!-- LEFT 6 COLS: REGISTRAR GASTO CON AUTO-CLASIFICACIÓN -->
+          <section class="panel col-6" aria-labelledby="headNewExpense">
+            <header>
+              <div>
+                <h2 id="headNewExpense">Registrar salida o aporte familiar</h2>
+                <p class="meta">Al escribir el detalle, el sistema deduce la categoría automáticamente</p>
+              </div>
+              <span class="pill pos" id="formAutoCatBadge">Deducción automática</span>
+            </header>
+
+            <form id="formNewExpense" style="display:flex; flex-direction:column; gap:12px;">
+              <div class="field">
+                <label for="expDesc">¿En qué salió la plata? (Escribí natural, deduce categoría solo)</label>
+                <input
+                  type="text"
+                  id="expDesc"
+                  class="input"
+                  placeholder="Ej: Remedios para papá / Compras para la casa / 2 hormas muzzarella / Garrafa"
+                  required
+                />
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="expAmount">Monto ($)</label>
+                  <input type="number" id="expAmount" class="input num" min="1" step="any" placeholder="18000" required />
+                </div>
+                <div class="field">
+                  <label for="expCategory">Categoría (deducida sola, editable)</label>
+                  <select id="expCategory" class="input" required>
+                    <option value="Casa y Familia (Papá)">Casa y Familia (Papá / Salud / Compras casa)</option>
+                    <option value="Mercadería / Insumos">Mercadería / Insumos</option>
+                    <option value="Garrafa / Gas">Garrafa / Gas</option>
+                    <option value="Pago a Sever">Pago a Sever</option>
+                    <option value="Ofrenda Iglesia (Luz/Alquiler)">Ofrenda Iglesia (Luz/Alquiler)</option>
+                    <option value="Alquiler">Alquiler (Aporte directo)</option>
+                    <option value="Luz">Luz (Aporte directo)</option>
+                    <option value="Descartables / Cajas">Descartables / Cajas</option>
+                    <option value="Retiro Personal">Retiro personal (Jonatan / Benja)</option>
+                    <option value="Otros">Otros gastos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-grid-2" style="padding:10px; background:var(--ground); border:1px solid var(--border); border-radius:var(--radius-control);">
+                <div class="field">
+                  <label for="expIngSelect">Insumo detectado (si cambió el precio)</label>
+                  <select id="expIngSelect" class="input">
+                    <option value="">Sin cambios en costos unitarios</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="expNewUnitPrice" id="expNewUnitLabel">Nuevo costo por kg/unid ($)</label>
+                  <input type="number" id="expNewUnitPrice" class="input num" min="0" step="any" placeholder="4200" />
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn primary">Guardar egreso</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- RIGHT 6 COLS: COMPROMISOS CON IGLESIA + SOSTÉN CASA/PAPÁ -->
+          <section class="panel col-6" aria-labelledby="headChurchPlan">
+            <header>
+              <div>
+                <h2 id="headChurchPlan">Compromisos del mes: Casa/Papá e Iglesia</h2>
+                <p class="meta">Alquiler real $800.000 · Luz $270.000 · Sostén familiar</p>
+              </div>
+              <button type="button" class="btn btn-sm" id="btnEditChurchTargets">Editar metas</button>
+            </header>
+
+            <div class="chart" id="churchPlanChart" style="min-height: 110px; margin-bottom: 12px;"></div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 14px;">
+              <button type="button" class="btn btn-sm" data-quick-exp="Casa y Familia (Papá)" data-amount="20000">+ Aporte Casa / Papá $20.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Ofrenda Iglesia (Luz/Alquiler)" data-amount="40000">+ Ofrenda semanal $40.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Alquiler" data-amount="100000">+ Aporte alquiler $100.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Luz" data-amount="75000">+ Aporte luz $75.000</button>
+            </div>
+
+            <div class="chart-head" style="border-top:1px solid var(--rule); padding-top:12px;">
+              <h3 style="font-size:var(--fs-body); font-weight:600;">Distribución de salidas del mes por categoría</h3>
+            </div>
+            <div class="chart" id="categoryBarListChart" style="min-height: 130px;"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- SCREEN 3: INSUMOS VARIABLES Y COSTEO DE RECETAS                      -->
+      <!-- ==================================================================== -->
+      <div class="screen-view" id="screen-costs" hidden>
+        <div class="grid top">
+          <!-- LEFT 5 COLS: PRECIOS DE INSUMOS VARIABLES -->
+          <section class="panel col-5" aria-labelledby="headIngredients">
+            <header>
+              <div>
+                <h2 id="headIngredients">Precios de insumos variables</h2>
+                <p class="meta">Al cambiar un valor se recalculan las recetas al instante</p>
+              </div>
+              <button type="button" class="btn btn-sm" id="btnNewIngredient">+ Insumo</button>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Insumo</th>
+                    <th>Unidad</th>
+                    <th class="n">Costo actual ($)</th>
+                  </tr>
+                </thead>
+                <tbody id="ingredientsTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- RIGHT 7 COLS: CARTA, COSTO POR UNIDAD Y GANANCIA -->
+          <section class="panel col-7" aria-labelledby="headRecipes">
+            <header>
+              <div>
+                <h2 id="headRecipes">Rentabilidad por producto de la carta</h2>
+                <p class="meta">Venta, costo de receta hoy y ganancia limpia por unidad</p>
+              </div>
+              <button type="button" class="btn primary btn-sm" id="btnOpenNewProduct">+ Producto</button>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="n">Precio venta</th>
+                    <th class="n">Costo hoy</th>
+                    <th class="n">Ganancia u.</th>
+                    <th class="n">Margen</th>
+                    <th class="n">Receta</th>
+                  </tr>
+                </thead>
+                <tbody id="productsCostTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- SCREEN 4: ANOTADOR COMPARTIDO (COMPRAS & TAREAS DE PRODUCCIÓN)       -->
+      <!-- ==================================================================== -->
+      <div class="screen-view" id="screen-notes" hidden>
+        <div class="grid top">
+          <section class="panel col-6" aria-labelledby="headBuyList">
+            <header>
+              <div>
+                <h2 id="headBuyList">Lista de compras de mercadería</h2>
+                <p class="meta">Convertí un ítem comprado en gasto del día con un clic</p>
+              </div>
+            </header>
+            <form id="formAddBuy" style="display:flex; gap:8px; margin-bottom:12px;">
+              <input type="text" id="inputBuyText" class="input" placeholder="Ej: 2 hormas de muzzarella, fardo de Manaos..." required />
+              <button type="submit" class="btn primary">Agregar</button>
+            </form>
+            <div class="rows" id="buyRowsContainer"></div>
+          </section>
+
+          <section class="panel col-6" aria-labelledby="headTodoList">
+            <header>
+              <div>
+                <h2 id="headTodoList">Tareas de producción con mi hermano</h2>
+                <p class="meta">Preparación previa antes de abrir el turno</p>
+              </div>
+            </header>
+            <form id="formAddTodo" style="display:flex; gap:8px; margin-bottom:12px;">
+              <input type="text" id="inputTodoText" class="input" placeholder="Ej: Amasar 25 bollos, marcar papas fritas..." required />
+              <button type="submit" class="btn primary">Agregar</button>
+            </form>
+            <div class="rows" id="todoRowsContainer"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- SCREEN 5: CONSULTOR IA Y SIMULADOR DE CRÉDITO / INVERSIÓN            -->
+      <!-- ==================================================================== -->
+      <div class="screen-view" id="screen-advisor" hidden>
+        <div class="grid top">
+          <section class="panel col-5" aria-labelledby="headSimulator">
+            <header>
+              <h2 id="headSimulator">Simulador de cuota o inversión</h2>
+              <span class="meta">Basado en tu ganancia neta</span>
+            </header>
+            <div class="field" style="margin-bottom:12px;">
+              <label for="inputSimQuota">Cuota mensual a evaluar ($)</label>
+              <input type="number" id="inputSimQuota" class="input num" value="120000" step="5000" />
+            </div>
+            <div id="simVerdictBox" style="padding:12px; background:var(--ground); border:1px solid var(--border); border-radius:var(--radius-control); margin-bottom:14px;"></div>
+
+            <h3 style="font-size:var(--fs-body); font-weight:600; margin-bottom:8px;">Lectura automática de tus estadísticas</h3>
+            <div class="rows" id="autoInsightsRows"></div>
+          </section>
+
+          <section class="panel col-7" aria-labelledby="headAdvisorChat">
+            <header>
+              <div>
+                <h2 id="headAdvisorChat">Consultor financiero sobre tus datos reales</h2>
+                <p class="meta">Lee tus ventas, recetas, pagos a Sever y aportes a la iglesia</p>
+              </div>
+              <button type="button" class="btn btn-sm" id="btnSetGeminiKey">API Gemini (Opcional)</button>
+            </header>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Qué productos me dejan más y menos ganancia hoy?">Productos más rentables</button>
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Cuánto puedo gastar hoy sin tocar la plata de reposición?">Disponible para gastar</button>
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="Si la muzzarella sube un 15%, ¿a cuánto ajusto las pizzas?">Simular suba de muzzarella</button>
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Cómo venimos con alquiler, luz, ofrendas y Sever este mes?">Balance Iglesia y Sever</button>
+            </div>
+
+            <div class="chat-log" id="advisorChatLog" aria-live="polite"></div>
+
+            <form id="formAdvisorChat" style="display:flex; gap:8px;">
+              <input type="text" id="inputAdvisorQuestion" class="input" placeholder="Escribí tu consulta sobre precios, márgenes o gastos..." required />
+              <button type="submit" class="btn primary">Consultar</button>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: EDITAR PRODUCTO Y RECETA -->
+  <div class="modal-backdrop" id="modalProduct" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalProductTitle">
+      <div class="modal-head">
+        <h2 id="modalProductTitle">Editar producto y receta</h2>
+        <button type="button" class="btn btn-sm" id="btnCloseProductModal">Cerrar</button>
+      </div>
+      <form id="formProductModal" style="display:flex; flex-direction:column; gap:12px;">
+        <input type="hidden" id="modalProdId" />
+        <div class="form-grid-2">
+          <div class="field">
+            <label for="modalProdName">Nombre del producto</label>
+            <input type="text" id="modalProdName" class="input" required />
+          </div>
+          <div class="field">
+            <label for="modalProdCat">Categoría</label>
+            <select id="modalProdCat" class="input">
+              <option value="Pizzas">Pizzas</option>
+              <option value="Minutas">Minutas</option>
+              <option value="Bebidas">Bebidas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field">
+            <label for="modalProdPrice">Precio de venta ($)</label>
+            <input type="number" id="modalProdPrice" class="input num" min="0" step="any" required />
+          </div>
+          <div class="field">
+            <label>Costo calculado de receta</label>
+            <div class="input num money-bold" id="modalRecipeCostPreview" style="display:flex; align-items:center; background:var(--ground);">$0</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:var(--fs-small); color:var(--muted); font-weight:500;">Ingredientes y cantidades por unidad</span>
+            <button type="button" class="btn btn-sm" id="btnAddRecipeRow">+ Ingrediente</button>
+          </div>
+          <div id="modalRecipeRows"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--border);">
+          <button type="button" class="btn btn-sm" id="btnDeleteProduct" style="color:var(--negative);">Eliminar</button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn" id="btnCancelProductModal">Cancelar</button>
+            <button type="submit" class="btn primary">Guardar cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SINCRONIZAR NUBE / RESPALDO ENTRE HERMANOS -->
+  <div class="modal-backdrop" id="modalSync" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalSyncTitle">
+      <div class="modal-head">
+        <h2 id="modalSyncTitle">Sincronización entre celulares y respaldo</h2>
+        <button type="button" class="btn btn-sm" id="btnCloseSyncModal">Cerrar</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="field">
+          <label for="inputFirebaseUrl">URL de Firebase Realtime Database (Sincronización en vivo con tu hermano)</label>
+          <div style="display:flex; gap:8px;">
+            <input type="url" id="inputFirebaseUrl" class="input" placeholder="https://mi-negocio-default-rtdb.firebaseio.com" />
+            <button type="button" class="btn primary" id="btnSaveFirebase">Conectar</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" id="btnSyncPush">Subir mis datos a la nube</button>
+          <button type="button" class="btn btn-sm" id="btnSyncPull">Traer datos de la nube</button>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:12px;">
+          <p class="meta" style="margin-bottom:8px;">Respaldo manual por archivo (para enviar por WhatsApp)</p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" id="btnExportBackup">Descargar archivo .json</button>
+            <label class="btn btn-sm" style="cursor:pointer;">
+              Cargar archivo .json
+              <input type="file" id="inputImportBackup" accept=".json" hidden />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
