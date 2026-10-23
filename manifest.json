@@ -1,8 +1,18 @@
 {
   "name": "Caja & Cocina — Libro Mayor Gastronómico",
-  "short_name": "Caja y Cocina",
+  "short_name": "Caja & Cocina",
+  "description": "Libro mayor offline-first de ventas por tanda, costos variables y gastos para Jonatan y Benja.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f4f3f1",
-  "theme_color": "#141414"
+  "theme_color": "#141414",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }

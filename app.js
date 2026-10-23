@@ -2171,4 +2171,19 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEvents();
   renderAll();
   askAdvisor('¿Qué productos me dejan más y menos ganancia hoy?');
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  window.addEventListener('offline', () => {
+    showToast('Modo sin señal activo: todo se guarda en este dispositivo');
+  });
+
+  window.addEventListener('online', () => {
+    showToast('Conexión recuperada: datos listos');
+    if (state.meta.firebaseUrl) {
+      syncToFirebaseSilent();
+    }
+  });
 });
