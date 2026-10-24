@@ -572,7 +572,7 @@ let state = loadState();
 let currentOperator = 'Jonatan';
 let currentPeriod = 'today';
 let activeDate = getOffsetDateISO(0);
-let activeCatFilter = 'Comida';
+let activeCatFilter = 'all';
 let draftCart = {};
 let severHours = 4;
 let severSelectedRate = 4500;
@@ -1133,7 +1133,18 @@ function renderCostsScreen() {
         <span style="font-weight:500;">${prod.name}</span>
         <span class="sub">${prod.category}</span>
       </td>
-      <td class="n money-bold num">${formatARS(prod.price)}</td>
+      <td class="n">
+        <input
+          type="number"
+          class="input num"
+          style="width:105px; text-align:right; height:30px; margin-left:auto; font-weight:600;"
+          data-prod-price-input="${prod.id}"
+          value="${prod.price}"
+          min="0"
+          step="any"
+          aria-label="Precio de venta de ${prod.name}"
+        />
+      </td>
       <td class="n num">${formatARS(cost)}</td>
       <td class="n money-bold num" style="color:var(--positive);">+${formatARS(profit)}</td>
       <td class="n"><span class="pill ${pillClass} num">${margin}%</span></td>
@@ -1873,7 +1884,19 @@ function setupEvents() {
     renderAll();
   });
 
-  // Product & Recipe modal
+  // Product & Recipe modal + inline selling price update
+  document.getElementById('productsCostTableBody').addEventListener('change', e => {
+    const priceInput = e.target.closest('[data-prod-price-input]');
+    if (!priceInput) return;
+    const prod = state.products.find(p => p.id === priceInput.dataset.prodPriceInput);
+    if (prod) {
+      prod.price = Math.max(0, Number(priceInput.value) || 0);
+      saveState();
+      renderAll();
+      showToast(`Precio de ${prod.name} actualizado a ${formatARS(prod.price)}`);
+    }
+  });
+
   document.getElementById('productsCostTableBody').addEventListener('click', e => {
     const btn = e.target.closest('[data-edit-prod]');
     if (btn) openProductModal(btn.dataset.editProd);
@@ -1923,11 +1946,15 @@ function setupEvents() {
         price,
         recipe
       });
+      activeCatFilter = 'all';
+      document.querySelectorAll('.cat-filter-btn').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.cat === 'all'));
+      });
     }
     saveState();
     closeProductModal();
     renderAll();
-    showToast('Receta actualizada');
+    showToast('Producto guardado y visible en el inicio');
   });
 
   document.getElementById('btnDeleteProduct').addEventListener('click', () => {
