@@ -136,9 +136,9 @@
         </div>
         <div class="title-controls">
           <div class="segmented" role="group" aria-label="Período de consulta">
-            <button type="button" class="period-btn" data-period="today" aria-pressed="true">Hoy</button>
+            <button type="button" class="period-btn" data-period="today" aria-pressed="false">Fecha</button>
             <button type="button" class="period-btn" data-period="week" aria-pressed="false">7 días</button>
-            <button type="button" class="period-btn" data-period="month" aria-pressed="false">Mes</button>
+            <button type="button" class="period-btn" data-period="month" aria-pressed="true">Mes Octubre</button>
           </div>
           <input type="date" id="activeDateInput" class="input" style="width: 148px;" aria-label="Fecha activa" />
           <button type="button" class="btn" id="btnCopyWhatsapp">
@@ -193,14 +193,14 @@
               </div>
             </section>
 
-            <!-- CALCULADORA DE TURNO SEVER -->
+            <!-- CALCULADORA DE TURNO HEBER -->
             <section class="panel" aria-labelledby="headSever">
               <header>
-                <h2 id="headSever">Pago por turno a Sever</h2>
+                <h2 id="headSever">Pago por turno a Heber</h2>
                 <span class="pill" id="severDayStatusPill">Martes, vie, sáb, dom</span>
               </header>
               <p class="meta" id="severSuggestionCopy">
-                Tarifa sugerida según el volumen vendido en la fecha seleccionada.
+                Tarifa sugerida según el volumen vendido en la fecha seleccionada ($12k a $18k por jornada).
               </p>
 
               <div class="sever-controls-row">
@@ -212,7 +212,7 @@
                 </div>
               </div>
 
-              <div class="rate-pills" id="severRatesBar" role="group" aria-label="Tarifa por hora de Sever">
+              <div class="rate-pills" id="severRatesBar" role="group" aria-label="Tarifa por hora de Heber">
                 <button type="button" class="rate-btn" data-rate="3000" aria-pressed="false">$3.000/h</button>
                 <button type="button" class="rate-btn" data-rate="3500" aria-pressed="true">$3.500/h</button>
                 <button type="button" class="rate-btn" data-rate="4000" aria-pressed="false">$4.000/h</button>
@@ -225,7 +225,7 @@
                   <div class="money-bold num" style="font-size: 18px;" id="severTotalAmount">$14.000</div>
                 </div>
                 <button type="button" class="btn primary" id="btnCommitSeverPay">
-                  Registrar pago a Sever
+                  Registrar pago a Heber
                 </button>
               </div>
             </section>
@@ -235,17 +235,17 @@
             <header>
               <div>
                 <h2 id="headTandaBuilder">Anotar tanda de ventas</h2>
-                <p class="meta">Anotá cada 2 horas o al cierre. Congela el costo actual de cada producto.</p>
+                <p class="meta">Precios reales de octubre (Muzza $10k, Promo 3x$27k, Docena Emp $14k, Bondiola $7k, Mila $14k).</p>
               </div>
               <div class="segmented" role="group" aria-label="Filtrar categoría de carta">
                 <button type="button" class="cat-filter-btn" data-cat="all" aria-pressed="true">Toda la carta</button>
-                <button type="button" class="cat-filter-btn" data-cat="Pizzas" aria-pressed="false">Pizzas</button>
-                <button type="button" class="cat-filter-btn" data-cat="Minutas" aria-pressed="false">Minutas</button>
+                <button type="button" class="cat-filter-btn" data-cat="Pizzas" aria-pressed="false">Pizzas y promos</button>
+                <button type="button" class="cat-filter-btn" data-cat="Minutas" aria-pressed="false">Empanadas y minutas</button>
                 <button type="button" class="cat-filter-btn" data-cat="Bebidas" aria-pressed="false">Bebidas</button>
               </div>
             </header>
 
-            <div class="product-counter-grid" id="productCounterGrid">
+            <div class="product-counter-grid" id="productCounterGrid" style="max-height: 340px; overflow-y: auto; padding-right: 4px;">
               <!-- Populated by JS -->
             </div>
 
@@ -257,7 +257,7 @@
                 <span>Limpio: <strong id="draftProfitSum" class="money-bold num">$0</strong></span>
               </div>
               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input type="text" id="draftNoteInput" class="input" style="width: 190px;" placeholder="Franja (ej. 20:00 a 22:00)" aria-label="Nota de la tanda" />
+                <input type="text" id="draftNoteInput" class="input" style="width: 190px;" placeholder="Nota (ej. Tanda noche / Ale)" aria-label="Nota de la tanda" />
                 <button type="button" class="btn" id="btnResetDraft" disabled>Limpiar</button>
                 <button type="button" class="btn primary" id="btnSaveTanda" disabled>Guardar tanda</button>
               </div>
@@ -269,22 +269,22 @@
         <div class="grid">
           <section class="panel col-5" aria-labelledby="headWeeklyChart">
             <div class="chart-head">
-              <h2 id="headWeeklyChart">Ventas diarias vs. meta de $100k</h2>
-              <span class="meta">Últimos 7 días</span>
+              <h2 id="headWeeklyChart">Ventas por jornada vs. meta de $100k</h2>
+              <span class="meta">Últimas 7 jornadas activas</span>
             </div>
             <div class="chart" id="weeklySalesChart" style="min-height: 310px;"></div>
             <div class="rows" style="margin-top:auto; border-top:1px solid var(--rule); padding-top:6px;">
               <div class="row">
-                <span class="meta">Promedio diario (7 días)</span>
-                <strong class="num" id="weeklyAvgFooter">$91.443</strong>
+                <span class="meta">Promedio por jornada activa</span>
+                <strong class="num" id="weeklyAvgFooter">$128.000</strong>
               </div>
               <div class="row">
-                <span class="meta">Total vendido ( últimos 7 días )</span>
-                <strong class="num" id="weeklySumFooter">$640.100</strong>
+                <span class="meta">Total vendido (7 jornadas)</span>
+                <strong class="num" id="weeklySumFooter">$896.000</strong>
               </div>
               <div class="row" style="padding-bottom:0;">
                 <span class="meta">Jornadas sobre la meta de $100.000</span>
-                <span class="pill pos num" id="weeklyGoalDaysFooter">3 de 7 días</span>
+                <span class="pill pos num" id="weeklyGoalDaysFooter">5 de 7 días</span>
               </div>
             </div>
           </section>
@@ -292,32 +292,32 @@
           <section class="panel col-7" aria-labelledby="headTodayMovements">
             <header>
               <div>
-                <h2 id="headTodayMovements">Salida rápida y movimientos de la fecha</h2>
-                <p class="meta">Escribí monto y motivo (ej: "18000 remedios papá" o "12500 garrafa") y se clasifica solo</p>
+                <h2 id="headTodayMovements">Salida rápida y movimientos registrados</h2>
+                <p class="meta">Escribí o pegá directo desde WhatsApp (ej: "garrafa 26.000", "60 a mami", "heber 15.000", "muzza 10kl 80.000")</p>
               </div>
               <span class="pill" id="smartPreviewBadge">Auto-clasificador activo</span>
             </header>
 
-            <!-- SMART 1-LINE EXPENSE INPUT (AUTO-CLASSIFIES WITHOUT DROPDOWN) -->
+            <!-- SMART 1-LINE EXPENSE INPUT (AUTO-CLASSIFIES WITHOUT DROPDOWN & SUPPORTS MULTILINE WHATSAPP PASTE) -->
             <form id="formQuickSmartExpense" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <input
                 type="text"
                 id="inputQuickSmartExpense"
                 class="input"
                 style="flex:1; min-width: 210px;"
-                placeholder="Ej: 15000 remedios papá / 22000 supermercado casa / 42000 10kg muzza"
+                placeholder="Ej: garrafa 26.000 / 60 a mami / heber 15.000 / carne picada 2kl 20.000 / benja 50.000"
                 aria-label="Anotar salida rápida con clasificación automática"
                 required
               />
               <button type="submit" class="btn primary">Anotar salida</button>
             </form>
 
-            <div class="table-wrap">
+            <div class="table-wrap" style="max-height: 345px; overflow-y: auto;">
               <table>
                 <thead>
                   <tr>
-                    <th>Hora</th>
-                    <th>Tipo y categoría deducida</th>
+                    <th>Fecha / Hora</th>
+                    <th>Detalle y categoría</th>
                     <th class="n hide-mobile">Reposición</th>
                     <th class="n">Caja</th>
                     <th class="n">Acción</th>
@@ -333,7 +333,7 @@
       </div>
 
       <!-- ==================================================================== -->
-      <!-- SCREEN 2: GASTOS, CASA/PAPÁ, ALQUILER, LUZ Y OFRENDAS (IGLESIA)      -->
+      <!-- SCREEN 2: GASTOS, CASA/PAPÁ/MAMI, HEBER, ALQUILER Y OFRENDAS         -->
       <!-- ==================================================================== -->
       <div class="screen-view" id="screen-expenses" hidden>
         <div class="grid top">
@@ -341,20 +341,20 @@
           <section class="panel col-6" aria-labelledby="headNewExpense">
             <header>
               <div>
-                <h2 id="headNewExpense">Registrar salida o aporte familiar</h2>
-                <p class="meta">Al escribir el detalle, el sistema deduce la categoría automáticamente</p>
+                <h2 id="headNewExpense">Registrar salida o pegar lista de WhatsApp</h2>
+                <p class="meta">Escribí un gasto o pegá varias líneas copiadas de tu grupo de WhatsApp</p>
               </div>
               <span class="pill pos" id="formAutoCatBadge">Deducción automática</span>
             </header>
 
             <form id="formNewExpense" style="display:flex; flex-direction:column; gap:12px;">
               <div class="field">
-                <label for="expDesc">¿En qué salió la plata? (Escribí natural, deduce categoría solo)</label>
+                <label for="expDesc">¿En qué salió la plata? (Tal cual lo anotás en WhatsApp)</label>
                 <input
                   type="text"
                   id="expDesc"
                   class="input"
-                  placeholder="Ej: Remedios para papá / Compras para la casa / 2 hormas muzzarella / Garrafa"
+                  placeholder="Ej: muzza 10kl 80.000 / garrafa 26.000 / 60 a mami / heber 15.000 / cajas 13.700"
                   required
                 />
               </div>
@@ -362,21 +362,22 @@
               <div class="form-grid-2">
                 <div class="field">
                   <label for="expAmount">Monto ($)</label>
-                  <input type="number" id="expAmount" class="input num" min="1" step="any" placeholder="18000" required />
+                  <input type="number" id="expAmount" class="input num" min="1" step="any" placeholder="26000" required />
                 </div>
                 <div class="field">
                   <label for="expCategory">Categoría (deducida sola, editable)</label>
                   <select id="expCategory" class="input" required>
-                    <option value="Casa y Familia (Papá)">Casa y Familia (Papá / Salud / Compras casa)</option>
                     <option value="Mercadería / Insumos">Mercadería / Insumos</option>
-                    <option value="Garrafa / Gas">Garrafa / Gas</option>
-                    <option value="Pago a Sever">Pago a Sever</option>
+                    <option value="Casa y Familia (Papá)">Casa y Familia (Papá / Mami / Cosas de casa)</option>
+                    <option value="Garrafa / Gas">Garrafa / Gas ($26.000)</option>
+                    <option value="Pago a Heber">Pago a Heber (Turnos)</option>
                     <option value="Ofrenda Iglesia (Luz/Alquiler)">Ofrenda Iglesia (Luz/Alquiler)</option>
+                    <option value="Descartables / Cajas">Descartables / Cajas / Papel / Bolsas</option>
+                    <option value="Equipamiento y Local">Equipamiento y Mejoras (Freidora, Heladera, Pintura)</option>
+                    <option value="Retiro Personal">Retiro o Gasto Personal (Jona / Benja)</option>
+                    <option value="Consumo / Merma">Consumo propio / Merma (-pizzas / -empanadas)</option>
                     <option value="Alquiler">Alquiler (Aporte directo)</option>
                     <option value="Luz">Luz (Aporte directo)</option>
-                    <option value="Descartables / Cajas">Descartables / Cajas</option>
-                    <option value="Retiro Personal">Retiro personal (Jonatan / Benja)</option>
-                    <option value="Otros">Otros gastos</option>
                   </select>
                 </div>
               </div>
@@ -390,7 +391,7 @@
                 </div>
                 <div class="field">
                   <label for="expNewUnitPrice" id="expNewUnitLabel">Nuevo costo por kg/unid ($)</label>
-                  <input type="number" id="expNewUnitPrice" class="input num" min="0" step="any" placeholder="4200" />
+                  <input type="number" id="expNewUnitPrice" class="input num" min="0" step="any" placeholder="8000" />
                 </div>
               </div>
 
@@ -404,8 +405,8 @@
           <section class="panel col-6" aria-labelledby="headChurchPlan">
             <header>
               <div>
-                <h2 id="headChurchPlan">Compromisos del mes: Casa/Papá e Iglesia</h2>
-                <p class="meta">Alquiler real $800.000 · Luz $270.000 · Sostén familiar</p>
+                <h2 id="headChurchPlan">Compromisos del mes: Casa, Heber e Iglesia</h2>
+                <p class="meta">Seguimiento mensual real de Octubre cargado desde tus registros</p>
               </div>
               <button type="button" class="btn btn-sm" id="btnEditChurchTargets">Editar metas</button>
             </header>
@@ -413,10 +414,10 @@
             <div class="chart" id="churchPlanChart" style="min-height: 110px; margin-bottom: 12px;"></div>
 
             <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 14px;">
-              <button type="button" class="btn btn-sm" data-quick-exp="Casa y Familia (Papá)" data-amount="20000">+ Aporte Casa / Papá $20.000</button>
-              <button type="button" class="btn btn-sm" data-quick-exp="Ofrenda Iglesia (Luz/Alquiler)" data-amount="40000">+ Ofrenda semanal $40.000</button>
-              <button type="button" class="btn btn-sm" data-quick-exp="Alquiler" data-amount="100000">+ Aporte alquiler $100.000</button>
-              <button type="button" class="btn btn-sm" data-quick-exp="Luz" data-amount="75000">+ Aporte luz $75.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Garrafa / Gas" data-amount="26000">+ Garrafa $26.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Pago a Heber" data-amount="15000">+ Turno Heber $15.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Casa y Familia (Papá)" data-amount="20000">+ Casa / Mami $20.000</button>
+              <button type="button" class="btn btn-sm" data-quick-exp="Ofrenda Iglesia (Luz/Alquiler)" data-amount="100000">+ Ofrenda $100.000</button>
             </div>
 
             <div class="chart-head" style="border-top:1px solid var(--rule); padding-top:12px;">

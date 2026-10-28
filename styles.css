@@ -497,10 +497,16 @@ a {
   border-bottom: 1px solid var(--rule);
 }
 
+.ledger-group-head strong {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .ledger-leaf {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 8px;
   padding: 4px 0 4px 8px;
   font-size: var(--fs-body);
   color: var(--muted);
@@ -510,6 +516,8 @@ a {
   color: var(--text);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ---------- CONTROLS, BUTTONS, INPUTS ---------- */
