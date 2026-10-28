@@ -956,18 +956,50 @@ let severHours = 4;
 let severSelectedRate = 3750;
 
 function loadState() {
+  const initial = getInitialState();
   try {
+    // Recover Gemini API key or Firebase URL from dedicated key or older storage versions
+    let savedGeminiKey = localStorage.getItem('gastro_gemini_key') || '';
+    let savedFirebaseUrl = localStorage.getItem('gastro_firebase_url') || '';
+    if (!savedGeminiKey || !savedFirebaseUrl) {
+      const legacyRaw = localStorage.getItem('gastro_caja_pro_v2');
+      if (legacyRaw) {
+        const legacy = JSON.parse(legacyRaw);
+        if (legacy?.meta?.geminiApiKey && !savedGeminiKey) {
+          savedGeminiKey = legacy.meta.geminiApiKey;
+          localStorage.setItem('gastro_gemini_key', savedGeminiKey);
+        }
+        if (legacy?.meta?.firebaseUrl && !savedFirebaseUrl) {
+          savedFirebaseUrl = legacy.meta.firebaseUrl;
+          localStorage.setItem('gastro_firebase_url', savedFirebaseUrl);
+        }
+      }
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return getInitialState();
+    if (!raw) {
+      initial.meta.geminiApiKey = savedGeminiKey;
+      initial.meta.firebaseUrl = savedFirebaseUrl;
+      return initial;
+    }
     const parsed = JSON.parse(raw);
-    return { ...getInitialState(), ...parsed };
+    const merged = { ...initial, ...parsed, meta: { ...initial.meta, ...(parsed.meta || {}) } };
+    if (savedGeminiKey && !merged.meta.geminiApiKey) merged.meta.geminiApiKey = savedGeminiKey;
+    if (savedFirebaseUrl && !merged.meta.firebaseUrl) merged.meta.firebaseUrl = savedFirebaseUrl;
+    return merged;
   } catch (e) {
-    return getInitialState();
+    return initial;
   }
 }
 
 function saveState(pushCloud = true) {
   state.meta.lastUpdated = Date.now();
+  if (state.meta.geminiApiKey !== undefined) {
+    localStorage.setItem('gastro_gemini_key', state.meta.geminiApiKey);
+  }
+  if (state.meta.firebaseUrl !== undefined) {
+    localStorage.setItem('gastro_firebase_url', state.meta.firebaseUrl);
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   if (pushCloud && state.meta.firebaseUrl) {
     syncToFirebaseSilent();
@@ -1626,21 +1658,32 @@ function renderNotesScreen() {
 // RENDER 6: AI ADVISOR & CREDIT SIMULATOR
 // ============================================================================
 function renderAdvisorScreen() {
-  const weekM = getMetricsForPeriod('week', activeDate);
+  const monthM = getMetricsForPeriod('month', activeDate);
   const ranked = [...state.products].sort(
     (a, b) => getProductMarginPercent(b) - getProductMarginPercent(a)
   );
   const best = ranked[0];
   const lowest = ranked[ranked.length - 1];
 
+  const geminiBadge = document.getElementById('geminiStatusBadge');
+  const geminiBtn = document.getElementById('btnSetGeminiKey');
+  const hasKey = Boolean(state.meta.geminiApiKey && state.meta.geminiApiKey.trim());
+  if (geminiBadge) {
+    geminiBadge.textContent = hasKey ? 'Gemini IA: Conectado' : 'Modo local (Sin API Key)';
+    geminiBadge.className = hasKey ? 'pill pos' : 'pill';
+  }
+  if (geminiBtn) {
+    geminiBtn.textContent = hasKey ? 'Cambiar API Gemini' : 'Configurar API Gemini';
+  }
+
   const rowsEl = document.getElementById('autoInsightsRows');
   rowsEl.innerHTML = `
     <div class="row">
       <div>
-        <div style="font-weight:500;">Disponible neto de los últimos 7 días</div>
-        <div class="meta">Descontando ${formatARS(weekM.cogsSold)} de reposición y ${formatARS(weekM.operatingExpenses)} de gastos</div>
+        <div style="font-weight:500;">Disponible neto acumulado de Octubre</div>
+        <div class="meta">Descontando ${formatARS(monthM.cogsSold)} de reposición y ${formatARS(monthM.operatingExpenses)} de salidas</div>
       </div>
-      <div class="money-bold num">${formatARS(weekM.netFreeProfit)}</div>
+      <div class="money-bold num">${formatARS(monthM.netFreeProfit)}</div>
     </div>
     <div class="row">
       <div>
@@ -1663,8 +1706,8 @@ function renderAdvisorScreen() {
 
 function updateCreditVerdict() {
   const quota = Number(document.getElementById('inputSimQuota').value) || 0;
-  const weekM = getMetricsForPeriod('week', activeDate);
-  const estimatedMonthlyNet = Math.max(weekM.netFreeProfit * 4, 850000);
+  const monthM = getMetricsForPeriod('month', activeDate);
+  const estimatedMonthlyNet = Math.max(monthM.grossProfitAfterReplenishment - 650000, 680000);
   const safeThreshold = Math.round(estimatedMonthlyNet * 0.25);
 
   const box = document.getElementById('simVerdictBox');
@@ -1675,7 +1718,7 @@ function updateCreditVerdict() {
         <span class="pill pos num">Hasta ${formatARS(safeThreshold)}/mes seguro</span>
       </div>
       <p class="meta">
-        La cuota de ${formatARS(quota)} consume menos del 25% de tu ganancia libre mensual proyectada (~${formatARS(
+        La cuota de ${formatARS(quota)} consume menos del 25% de tu margen operativo mensual (~${formatARS(
       estimatedMonthlyNet
     )}). Podés afrontarla sin tocar el fondo de reposición de mercadería.
       </p>
@@ -1687,12 +1730,22 @@ function updateCreditVerdict() {
         <span class="pill warn num">Supera ${formatARS(safeThreshold)}/mes</span>
       </div>
       <p class="meta">
-        Una cuota de ${formatARS(quota)} exige más del 25% de tu ganancia libre mensual proyectada (~${formatARS(
+        Una cuota de ${formatARS(quota)} exige más del 25% de tu margen operativo mensual (~${formatARS(
       estimatedMonthlyNet
     )}). Solo se recomienda si el equipamiento reduce costos de insumos o aumenta las tandas por noche.
       </p>
     `;
   }
+}
+
+function formatMarkdownToHtml(md) {
+  return String(md || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^\s*[\*\-]\s+(.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
 }
 
 async function askAdvisor(question) {
@@ -1705,7 +1758,10 @@ async function askAdvisor(question) {
 
   const aDiv = document.createElement('div');
   aDiv.className = 'chat-entry assistant';
-  aDiv.textContent = 'Calculando sobre tus registros...';
+  const rawKey = (state.meta.geminiApiKey || '').trim().replace(/^["']|["']$/g, '');
+  aDiv.textContent = rawKey
+    ? 'Consultando a Gemini IA con tus números de Octubre...'
+    : 'Calculando sobre tus registros locales...';
   log.appendChild(aDiv);
   log.scrollTop = log.scrollHeight;
 
@@ -1713,55 +1769,117 @@ async function askAdvisor(question) {
   const weekM = getMetricsForPeriod('week', activeDate);
   const monthM = getMetricsForPeriod('month', activeDate);
 
-  if (state.meta.geminiApiKey) {
-    try {
-      const payload = {
-        hoy: todayM,
-        semana: weekM,
-        mes: monthM,
-        productos: state.products.map(p => ({
-          nombre: p.name,
-          venta: p.price,
-          costo: calculateProductCost(p),
-          margen: getProductMarginPercent(p)
-        }))
-      };
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(
-          state.meta.geminiApiKey
-        )}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Sos el consultor financiero de un local gastronómico familiar de pizzas, sánguches, empanadas y bebidas. Respondé conciso y con números exactos usando este contexto: ${JSON.stringify(
-                      payload
-                    )}. Pregunta: ${question}`
-                  }
-                ]
-              }
-            ]
-          })
+  let geminiErrorNotice = '';
+
+  if (rawKey) {
+    // Build compact category breakdown for Gemini so the prompt is fast and exact
+    const catTotals = {};
+    monthM.expensesInPeriod.forEach(e => {
+      catTotals[e.category] = (catTotals[e.category] || 0) + Number(e.amount || 0);
+    });
+
+    const payload = {
+      negocio: 'Local gastronómico de Jonatan y Benja (Pizzas, Empanadas fritas/horno, Sánguches de Bondiola y Milanesa, Hamburguesas, Papas y Bebidas). Empleado por turno: Heber.',
+      fechaSeleccionada: {
+        fecha: activeDate,
+        vendidoBruto: todayM.grossSales,
+        costoReposicion: todayM.cogsSold,
+        gastosOperativos: todayM.operatingExpenses,
+        saldoLibre: todayM.netFreeProfit
+      },
+      ultimos7Dias: {
+        vendidoBruto: weekM.grossSales,
+        costoReposicion: weekM.cogsSold,
+        gastosOperativos: weekM.operatingExpenses,
+        saldoLibre: weekM.netFreeProfit
+      },
+      mesOctubreCompleto: {
+        cierresTotales: monthM.tandasCount,
+        vendidoBruto: monthM.grossSales,
+        costoReposicionMercaderiaVendida: monthM.cogsSold,
+        comprasRealesInsumosYDescartables: monthM.stockPurchases,
+        salidasOperativasCasaYRetiros: monthM.operatingExpenses,
+        aporteCasaMamiPapa: monthM.familySupport,
+        saldoLibreEnCaja: monthM.netFreeProfit,
+        desgloseEgresosPorCategoria: catTotals
+      },
+      costosInsumosActuales: state.ingredients.map(i => ({
+        insumo: i.name,
+        unidad: i.unit,
+        costoARS: i.price
+      })),
+      cartaProductosYMargenes: state.products.map(p => ({
+        producto: p.name,
+        categoria: p.category,
+        precioVentaARS: p.price,
+        costoRecetaARS: calculateProductCost(p),
+        gananciaLimpiaUnitariaARS: p.price - calculateProductCost(p),
+        margenPorcentaje: getProductMarginPercent(p) + '%'
+      }))
+    };
+
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    for (const modelName of modelsToTry) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+            rawKey
+          )}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text:
+                        `Sos el consultor financiero y gastronómico de confianza de Jonatan y su hermano Benja en Argentina. ` +
+                        `Hablales en español rioplatense claro, directo y práctico (usá pesos argentinos con formato $XX.XXX). ` +
+                        `Respondé su consulta usando exactamente los datos reales de su negocio en Octubre que están en este JSON: ${JSON.stringify(
+                          payload
+                        )}.\n\nConsulta del usuario: ${question}`
+                    }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (res.ok && reply) {
+          aDiv.innerHTML =
+            `<div style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">` +
+            `<span class="pill pos">Gemini IA (${modelName})</span>` +
+            `</div>` +
+            formatMarkdownToHtml(reply);
+          log.scrollTop = log.scrollHeight;
+          return;
+        } else if (data?.error?.message) {
+          geminiErrorNotice = data.error.message;
+          // If the key itself is invalid, no need to retry other models
+          if (
+            geminiErrorNotice.toLowerCase().includes('api key not valid') ||
+            geminiErrorNotice.toLowerCase().includes('api_key_invalid')
+          ) {
+            break;
+          }
         }
-      );
-      const data = await res.json();
-      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (reply) {
-        aDiv.innerHTML = reply.replace(/\n/g, '<br>');
-        log.scrollTop = log.scrollHeight;
-        return;
+      } catch (e) {
+        geminiErrorNotice = 'Sin conexión a internet o bloqueo de red';
       }
-    } catch (e) {
-      // Fallback to local engine
     }
   }
 
+  const prefixBadge = rawKey
+    ? `<div style="margin-bottom:6px;"><span class="pill warn">No se pudo conectar a Gemini (${
+        geminiErrorNotice || 'Verificá tu API Key'
+      }) · Respuesta del motor local:</span></div>`
+    : `<div style="margin-bottom:6px;"><span class="pill">Motor local (Configurá tu API Gemini arriba para respuestas abiertas con IA)</span></div>`;
+
   const q = question.toLowerCase();
-  if (q.includes('rentable') || q.includes('ganancia') || q.includes('producto')) {
+  if (q.includes('rentable') || q.includes('ganancia') || q.includes('producto') || q.includes('margen')) {
     const byUnitProfit = [...state.products]
       .map(p => ({
         name: p.name,
@@ -1771,53 +1889,63 @@ async function askAdvisor(question) {
       .sort((a, b) => b.profit - a.profit);
 
     const top = byUnitProfit
-      .slice(0, 3)
-      .map(x => `• <strong>${x.name}</strong>: +${formatARS(x.profit)} limpios por unidad (${x.pct}%)`)
+      .slice(0, 4)
+      .map(x => `• <strong>${x.name}</strong>: +${formatARS(x.profit)} limpios (${x.pct}%)`)
       .join('<br>');
-    aDiv.innerHTML = `<strong>Productos que más dinero limpio dejan por unidad:</strong><br>${top}`;
-  } else if (q.includes('muzzarella') || q.includes('15%')) {
+    const low = byUnitProfit
+      .slice(-3)
+      .map(x => `• <strong>${x.name}</strong>: +${formatARS(x.profit)} limpios (${x.pct}%)`)
+      .join('<br>');
+    aDiv.innerHTML = `${prefixBadge}<strong>Mayor ganancia limpia por venta:</strong><br>${top}<br><br><strong>Margen más chico por unidad:</strong><br>${low}`;
+  } else if (q.includes('muzzarella') || q.includes('15%') || q.includes('sube') || q.includes('aument')) {
     const muzza = getIngredientById('ing_muzza');
-    const currentPrice = muzza ? muzza.price : 4200;
+    const currentPrice = muzza ? muzza.price : 8000;
     const nextPrice = Math.round(currentPrice * 1.15);
-    const diffPerPizza = Math.round((nextPrice - currentPrice) * 0.32);
-    aDiv.innerHTML = `Si la muzzarella sube 15% (de ${formatARS(currentPrice)} a ${formatARS(
+    const diffPerPizza = Math.round((nextPrice - currentPrice) * 0.3);
+    aDiv.innerHTML = `${prefixBadge}Si la muzzarella sube 15% (de ${formatARS(currentPrice)} a ${formatARS(
       nextPrice
     )}/kg), el costo de cada Pizza Muzzarella sube <strong>+${formatARS(
       diffPerPizza
-    )}</strong>. Para sostener tu margen del 68%, deberías ajustar el precio de venta unos <strong>+${formatARS(
-      Math.ceil((diffPerPizza * 2.5) / 100) * 100
+    )}</strong>. Para sostener tu margen del 63%, te conviene ajustar la Pizza Muzzarella de $10.000 a <strong>${formatARS(
+      10000 + Math.ceil((diffPerPizza * 2.5) / 500) * 500
+    )}</strong> y la Promo 3x$27.000 a <strong>${formatARS(
+      27000 + Math.ceil((diffPerPizza * 3 * 2.5) / 1000) * 1000
     )}</strong>.`;
-  } else if (q.includes('iglesia') || q.includes('alquiler') || q.includes('luz') || q.includes('heber') || q.includes('sever')) {
-    const rent = monthM.expensesInPeriod
-      .filter(e => e.category === 'Alquiler')
-      .reduce((s, e) => s + Number(e.amount), 0);
+  } else if (q.includes('iglesia') || q.includes('alquiler') || q.includes('luz') || q.includes('heber') || q.includes('sever') || q.includes('casa') || q.includes('mami')) {
     const light = monthM.expensesInPeriod
       .filter(e => e.category === 'Luz' || e.category === 'Ofrenda Iglesia (Luz/Alquiler)')
       .reduce((s, e) => s + Number(e.amount), 0);
     const heber = monthM.expensesInPeriod
       .filter(e => e.category === 'Pago a Heber' || e.category === 'Pago a Sever')
       .reduce((s, e) => s + Number(e.amount), 0);
-    aDiv.innerHTML = `<strong>Acumulado del mes actual:</strong><br>• Alquiler aportado: <strong>${formatARS(
-      rent
-    )}</strong> (Meta habitual: ${formatARS(state.meta.rentMyGoal)})<br>• Luz directa + Ofrendas: <strong>${formatARS(
+    const gas = monthM.expensesInPeriod
+      .filter(e => e.category === 'Garrafa / Gas')
+      .reduce((s, e) => s + Number(e.amount), 0);
+    aDiv.innerHTML = `${prefixBadge}<strong>Balance acumulado de Octubre:</strong><br>• Ofrenda Iglesia / Luz / Alquiler: <strong>${formatARS(
       light
-    )}</strong> (Meta habitual: ${formatARS(state.meta.lightMyGoal)})<br>• Turnos pagados a Heber: <strong>${formatARS(
+    )}</strong><br>• Casa y Familia (Mami / Papá): <strong>${formatARS(
+      monthM.familySupport
+    )}</strong><br>• Turnos pagados a Heber: <strong>${formatARS(
       heber
-    )}</strong>`;
+    )}</strong><br>• 6 Garrafas de gas: <strong>${formatARS(gas)}</strong>`;
   } else {
-    aDiv.innerHTML = `En la fecha seleccionada llevás <strong>${formatARS(
-      todayM.grossSales
-    )}</strong> vendidos. Separando <strong>${formatARS(
-      todayM.cogsSold
-    )}</strong> para reponer la mercadería que salió y descontando <strong>${formatARS(
-      todayM.operatingExpenses
-    )}</strong> de gastos del día, te quedan <strong>${formatARS(
-      todayM.netFreeProfit
-    )} limpios</strong>. En todo Octubre llevás <strong>${formatARS(
+    const equip = monthM.expensesInPeriod
+      .filter(e => e.category === 'Equipamiento y Local')
+      .reduce((s, e) => s + Number(e.amount), 0);
+    const retiros = monthM.expensesInPeriod
+      .filter(e => e.category === 'Retiro Personal')
+      .reduce((s, e) => s + Number(e.amount), 0);
+    aDiv.innerHTML = `${prefixBadge}<strong>Diagnóstico de Octubre (24 cierres):</strong><br>• Vendido bruto: <strong>${formatARS(
       monthM.grossSales
-    )}</strong> vendidos y un resultado operativo de <strong>${formatARS(
-      monthM.netFreeProfit
-    )}</strong>.`;
+    )}</strong><br>• Fondo de reposición de mercadería: <strong>${formatARS(
+      monthM.cogsSold
+    )}</strong> (Compras reales en el mes: ${formatARS(
+      monthM.stockPurchases
+    )})<br>• Inversión extraordinaria en equipamiento (Freidora, pintura, heladera): <strong>${formatARS(
+      equip
+    )}</strong><br>• Retiros personales (Benja $160k + Jona $118k): <strong>${formatARS(
+      retiros
+    )}</strong><br>• Saldo libre neto en caja hoy: <strong>${formatARS(monthM.netFreeProfit)}</strong>`;
   }
 
   log.scrollTop = log.scrollHeight;
@@ -2520,11 +2648,17 @@ function setupEvents() {
     input.value = '';
   });
   document.getElementById('btnSetGeminiKey').addEventListener('click', () => {
-    const k = prompt('Pegá tu API Key de Google Gemini (o dejá vacío para usar el motor local):', state.meta.geminiApiKey || '');
+    const k = prompt('Pegá tu API Key de Google Gemini (de Google AI Studio, empieza con AIza...):', state.meta.geminiApiKey || '');
     if (k !== null) {
-      state.meta.geminiApiKey = k.trim();
+      state.meta.geminiApiKey = k.trim().replace(/^["']|["']$/g, '');
       saveState();
-      showToast(state.meta.geminiApiKey ? 'API Key guardada' : 'Motor local activo');
+      renderAdvisorScreen();
+      if (state.meta.geminiApiKey) {
+        showToast('API Key guardada · Probando conexión con Gemini IA...');
+        askAdvisor('Haceme un diagnóstico rápido de nuestro mes de Octubre y decime un consejo concreto para mejorar nuestra ganancia libre.');
+      } else {
+        showToast('Motor local activo (sin API Key)');
+      }
     }
   });
 

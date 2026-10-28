@@ -546,17 +546,20 @@
           <section class="panel col-7" aria-labelledby="headAdvisorChat">
             <header>
               <div>
-                <h2 id="headAdvisorChat">Consultor financiero sobre tus datos reales</h2>
-                <p class="meta">Lee tus ventas, recetas, pagos a Sever y aportes a la iglesia</p>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <h2 id="headAdvisorChat">Consultor financiero sobre tus datos reales</h2>
+                  <span class="pill" id="geminiStatusBadge">Modo local (Sin API Key)</span>
+                </div>
+                <p class="meta">Lee tus ventas de octubre, recetas, pagos a Heber, casa y aportes a la iglesia</p>
               </div>
-              <button type="button" class="btn btn-sm" id="btnSetGeminiKey">API Gemini (Opcional)</button>
+              <button type="button" class="btn btn-sm" id="btnSetGeminiKey">Configurar API Gemini</button>
             </header>
 
             <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
               <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Qué productos me dejan más y menos ganancia hoy?">Productos más rentables</button>
-              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Cuánto puedo gastar hoy sin tocar la plata de reposición?">Disponible para gastar</button>
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="Analizá mi mes de octubre completo: ¿en qué se nos fue más plata y cómo mejorar el margen?">Diagnóstico de Octubre</button>
               <button type="button" class="btn btn-sm quick-ai-btn" data-q="Si la muzzarella sube un 15%, ¿a cuánto ajusto las pizzas?">Simular suba de muzzarella</button>
-              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Cómo venimos con alquiler, luz, ofrendas y Sever este mes?">Balance Iglesia y Sever</button>
+              <button type="button" class="btn btn-sm quick-ai-btn" data-q="¿Cómo venimos con alquiler, luz, ofrendas, casa y Heber este mes?">Balance Iglesia, Casa y Heber</button>
             </div>
 
             <div class="chat-log" id="advisorChatLog" aria-live="polite"></div>
