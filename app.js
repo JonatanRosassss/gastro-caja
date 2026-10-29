@@ -1665,14 +1665,26 @@ function renderNotesScreen() {
 // ============================================================================
 let cachedDiscoveredModels = null;
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 9000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function discoverAvailableGeminiModels(rawKey) {
   if (!rawKey) return [];
   if (cachedDiscoveredModels && cachedDiscoveredModels.key === rawKey) {
     return cachedDiscoveredModels.list;
   }
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(rawKey)}`
+    const res = await fetchWithTimeout(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(rawKey)}`,
+      {},
+      4500
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -1684,30 +1696,36 @@ async function discoverAvailableGeminiModels(rawKey) {
         const id = String(m.name || '').replace(/^models\//, '');
         if (!methods.includes('generateContent')) return false;
         if (!id.startsWith('gemini-')) return false;
-        // Skip old 1.x / 2.0 or non-text specialized endpoints
-        if (/^(gemini-1\.|gemini-2\.0|.*(embedding|imagen|veo|tts|audio|robotics|computer-use|aqa|bisheng).*)/i.test(id)) {
+        // Skip slow thinking/image/audio/tts/embedding/legacy endpoints that hang or fail on text chat
+        if (
+          /^(gemini-1\.0|gemini-1\.5-pro|.*(embedding|imagen|veo|tts|audio|live|image|vision|robotics|computer-use|aqa|bisheng|thinking|learnlm|gemma|exp-).*)/i.test(
+            id
+          )
+        ) {
           return false;
         }
         return true;
       })
       .map(m => String(m.name).replace(/^models\//, ''));
 
-    // Score models so newest 3.8 / 3.7 / 3.5 / 3.1 / 3.0 Flash come first
+    // Score models: ALWAYS prioritize fast Flash models first, sorted by newest version (3.8 > 3.7 > 3.5 > 3.1 > 3.0 > 2.5)
     const scoreModel = id => {
       const verMatch = id.match(/gemini-(\d+(?:\.\d+)?)/);
-      const ver = verMatch ? parseFloat(verMatch[1]) : 2.5;
+      const ver = verMatch ? parseFloat(verMatch[1]) : 2.0;
       let score = ver * 100;
-      if (id.includes('flash') && !id.includes('lite')) score += 25;
-      if (id.includes('pro')) score += 15;
-      if (!id.includes('lite')) score += 5;
-      if (id === 'gemini-3.8-flash' || id === 'gemini-3.7-flash' || id === 'gemini-3.5-flash') score += 10;
+      // Huge priority to standard Flash models so it never hangs on slow Pro/Thinking models
+      if (id.includes('flash') && !id.includes('lite') && !id.includes('8b')) score += 1000;
+      else if (id.includes('flash-lite')) score += 600;
+      else if (id.includes('pro')) score += 100;
+      // Prefer clean alias over dated preview snapshots
+      if (!/-\d{2}-\d{2}/.test(id) && !id.includes('preview')) score += 30;
       return score;
     };
 
     candidates.sort((a, b) => scoreModel(b) - scoreModel(a));
     cachedDiscoveredModels = { key: rawKey, list: candidates };
 
-    // Also add any discovered modern models to the dropdown selector
+    // Populate discovered models into the dropdown selector
     const sel = document.getElementById('selectGeminiModel');
     if (sel && candidates.length) {
       const existingValues = new Set(Array.from(sel.options).map(o => o.value));
@@ -1716,7 +1734,7 @@ async function discoverAvailableGeminiModels(rawKey) {
         if (!existingValues.has(modId)) {
           const opt = document.createElement('option');
           opt.value = modId;
-          opt.textContent = modId;
+          opt.textContent = `${modId} (Detectado en tu cuenta)`;
           sel.insertBefore(opt, customOpt || null);
           existingValues.add(modId);
         }
@@ -1756,7 +1774,7 @@ function renderAdvisorScreen() {
   if (geminiBadge) {
     const modLabel =
       !state.meta.geminiModel || state.meta.geminiModel === 'auto'
-        ? 'Auto 3.8/3.7+'
+        ? 'Auto Flash'
         : state.meta.geminiModel;
     geminiBadge.textContent = hasKey ? `Gemini IA: Conectado (${modLabel})` : 'Modo local (Sin API Key)';
     geminiBadge.className = hasKey ? 'pill pos' : 'pill';
@@ -1837,7 +1855,7 @@ function formatMarkdownToHtml(md) {
     .replace(/\n/g, '<br>');
 }
 
-async function askAdvisor(question) {
+async function askAdvisor(question, forceLocal = false) {
   const log = document.getElementById('advisorChatLog');
 
   const uDiv = document.createElement('div');
@@ -1848,9 +1866,10 @@ async function askAdvisor(question) {
   const aDiv = document.createElement('div');
   aDiv.className = 'chat-entry assistant';
   const rawKey = (state.meta.geminiApiKey || '').trim().replace(/^["']|["']$/g, '');
-  aDiv.textContent = rawKey
-    ? 'Consultando a Gemini IA con tus números de Octubre...'
-    : 'Calculando sobre tus registros locales...';
+  aDiv.textContent =
+    rawKey && !forceLocal
+      ? 'Conectando con Google Gemini IA...'
+      : 'Calculando sobre tus registros locales...';
   log.appendChild(aDiv);
   log.scrollTop = log.scrollHeight;
 
@@ -1860,133 +1879,132 @@ async function askAdvisor(question) {
 
   let geminiErrorNotice = '';
 
-  if (rawKey) {
-    // Build compact category breakdown for Gemini so the prompt is fast and exact
-    const catTotals = {};
-    monthM.expensesInPeriod.forEach(e => {
-      catTotals[e.category] = (catTotals[e.category] || 0) + Number(e.amount || 0);
-    });
+  if (rawKey && !forceLocal) {
+    try {
+      const catTotals = {};
+      monthM.expensesInPeriod.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + Number(e.amount || 0);
+      });
 
-    const payload = {
-      negocio: 'Local gastronómico de Jonatan y Benja (Pizzas, Empanadas fritas/horno, Sánguches de Bondiola y Milanesa, Hamburguesas, Papas y Bebidas). Empleado por turno: Heber.',
-      fechaSeleccionada: {
-        fecha: activeDate,
-        vendidoBruto: todayM.grossSales,
-        costoReposicion: todayM.cogsSold,
-        gastosOperativos: todayM.operatingExpenses,
-        saldoLibre: todayM.netFreeProfit
-      },
-      ultimos7Dias: {
-        vendidoBruto: weekM.grossSales,
-        costoReposicion: weekM.cogsSold,
-        gastosOperativos: weekM.operatingExpenses,
-        saldoLibre: weekM.netFreeProfit
-      },
-      mesOctubreCompleto: {
-        cierresTotales: monthM.tandasCount,
-        vendidoBruto: monthM.grossSales,
-        costoReposicionMercaderiaVendida: monthM.cogsSold,
-        comprasRealesInsumosYDescartables: monthM.stockPurchases,
-        salidasOperativasCasaYRetiros: monthM.operatingExpenses,
-        aporteCasaMamiPapa: monthM.familySupport,
-        saldoLibreEnCaja: monthM.netFreeProfit,
-        desgloseEgresosPorCategoria: catTotals
-      },
-      costosInsumosActuales: state.ingredients.map(i => ({
-        insumo: i.name,
-        unidad: i.unit,
-        costoARS: i.price
-      })),
-      cartaProductosYMargenes: state.products.map(p => ({
-        producto: p.name,
-        categoria: p.category,
-        precioVentaARS: p.price,
-        costoRecetaARS: calculateProductCost(p),
-        gananciaLimpiaUnitariaARS: p.price - calculateProductCost(p),
-        margenPorcentaje: getProductMarginPercent(p) + '%'
-      }))
-    };
+      const payload = {
+        negocio: 'Local gastronómico de Jonatan y Benja (Pizzas, Empanadas, Bondiola, Milanesa, Hamburguesas, Papas y Bebidas). Empleado por turno: Heber.',
+        mesOctubreCompleto: {
+          cierresTotales: monthM.tandasCount,
+          vendidoBruto: monthM.grossSales,
+          costoReposicionMercaderiaVendida: monthM.cogsSold,
+          comprasRealesInsumosYDescartables: monthM.stockPurchases,
+          salidasOperativasCasaYRetiros: monthM.operatingExpenses,
+          aporteCasaMamiPapa: monthM.familySupport,
+          saldoLibreEnCaja: monthM.netFreeProfit,
+          desgloseEgresosPorCategoria: catTotals
+        },
+        costosInsumosActuales: state.ingredients.map(i => ({
+          insumo: i.name,
+          unidad: i.unit,
+          costoARS: i.price
+        })),
+        cartaProductosYMargenes: state.products.map(p => ({
+          producto: p.name,
+          precioVentaARS: p.price,
+          costoRecetaARS: calculateProductCost(p),
+          gananciaLimpiaUnitariaARS: p.price - calculateProductCost(p),
+          margenPorcentaje: getProductMarginPercent(p) + '%'
+        }))
+      };
 
-    // Discover modern models available on this API key + prioritize 3.8 / 3.7 / 3.5 / 3.1 / 3.0 Flash
-    const discovered = await discoverAvailableGeminiModels(rawKey);
-    const preferred = state.meta.geminiModel || 'auto';
-    const modernChain = [
-      'gemini-3.8-flash',
-      'gemini-3.8-flash-preview',
-      'gemini-3.7-flash',
-      'gemini-3.7-flash-preview',
-      'gemini-3.5-flash',
-      'gemini-3.5-flash-preview',
-      'gemini-3.1-flash-preview',
-      'gemini-3.0-flash',
-      ...discovered,
-      'gemini-2.5-flash'
-    ];
+      const discovered = await discoverAvailableGeminiModels(rawKey);
+      const preferred = state.meta.geminiModel || 'auto';
 
-    const rawList =
-      preferred !== 'auto'
-        ? [preferred, `${preferred}-preview`, `${preferred}-latest`, ...discovered, ...modernChain]
-        : [...discovered, ...modernChain];
-
-    const modelsToTry = [...new Set(rawList.filter(Boolean))];
-
-    for (const modelName of modelsToTry) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            rawKey
-          )}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text:
-                        `Sos el consultor financiero y gastronómico de confianza de Jonatan y su hermano Benja en Argentina. ` +
-                        `Hablales en español rioplatense claro, directo y práctico (usá pesos argentinos con formato $XX.XXX). ` +
-                        `Respondé su consulta usando exactamente los datos reales de su negocio en Octubre que están en este JSON: ${JSON.stringify(
-                          payload
-                        )}.\n\nConsulta del usuario: ${question}`
-                    }
-                  ]
-                }
-              ]
-            })
-          }
-        );
-        const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (res.ok && reply) {
-          aDiv.innerHTML =
-            `<div style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">` +
-            `<span class="pill pos">Gemini IA (${modelName})</span>` +
-            `</div>` +
-            formatMarkdownToHtml(reply);
-          log.scrollTop = log.scrollHeight;
-          return;
-        } else if (data?.error?.message) {
-          geminiErrorNotice = data.error.message;
-          if (
-            geminiErrorNotice.toLowerCase().includes('api key not valid') ||
-            geminiErrorNotice.toLowerCase().includes('api_key_invalid')
-          ) {
-            break;
-          }
-        }
-      } catch (e) {
-        geminiErrorNotice = 'Sin conexión a internet o bloqueo de red';
+      let candidateList = [];
+      if (preferred !== 'auto') {
+        candidateList = [preferred, ...discovered, 'gemini-2.5-flash', 'gemini-2.0-flash'];
+      } else if (discovered.length > 0) {
+        candidateList = discovered;
+      } else {
+        candidateList = [
+          'gemini-3.8-flash',
+          'gemini-3.7-flash',
+          'gemini-3.0-flash',
+          'gemini-2.5-flash',
+          'gemini-2.0-flash'
+        ];
       }
+
+      const modelsToTry = [...new Set(candidateList.filter(Boolean))].slice(0, 3);
+
+      for (const modelName of modelsToTry) {
+        try {
+          aDiv.textContent = `Consultando a ${modelName}...`;
+          const res = await fetchWithTimeout(
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+              rawKey
+            )}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text:
+                          `Sos el consultor financiero y gastronómico de confianza de Jonatan y su hermano Benja en Argentina. ` +
+                          `Hablales en español rioplatense claro, conciso y práctico (usá pesos argentinos con formato $XX.XXX). ` +
+                          `Respondé su consulta usando exactamente los datos reales de su negocio en Octubre que están en este JSON: ${JSON.stringify(
+                            payload
+                          )}.\n\nConsulta del usuario: ${question}`
+                      }
+                    ]
+                  }
+                ]
+              })
+            },
+            14000
+          );
+          const data = await res.json();
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          const nonThoughtParts = parts.filter(p => !p.thought && p.text);
+          const reply = (nonThoughtParts.length ? nonThoughtParts : parts)
+            .map(p => p.text || '')
+            .join('\n')
+            .trim();
+          if (res.ok && reply) {
+            aDiv.innerHTML =
+              `<div style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">` +
+              `<span class="pill pos">Gemini IA (${modelName})</span>` +
+              `</div>` +
+              formatMarkdownToHtml(reply);
+            log.scrollTop = log.scrollHeight;
+            return;
+          } else if (data?.error?.message) {
+            geminiErrorNotice = `${modelName}: ${data.error.message}`;
+            if (
+              geminiErrorNotice.toLowerCase().includes('api key not valid') ||
+              geminiErrorNotice.toLowerCase().includes('api_key_invalid')
+            ) {
+              break;
+            }
+          }
+        } catch (err) {
+          geminiErrorNotice =
+            err?.name === 'AbortError'
+              ? `Tiempo de espera agotado en ${modelName}`
+              : `Error de red al conectar con ${modelName}`;
+        }
+      }
+    } catch (outerErr) {
+      geminiErrorNotice = 'Error inesperado al consultar la API';
     }
   }
 
-  const prefixBadge = rawKey
-    ? `<div style="margin-bottom:6px;"><span class="pill warn">No se pudo conectar a Gemini (${
-        geminiErrorNotice || 'Verificá tu API Key'
-      }) · Respuesta del motor local:</span></div>`
-    : `<div style="margin-bottom:6px;"><span class="pill">Motor local (Configurá tu API Gemini arriba para respuestas abiertas con IA)</span></div>`;
+  const prefixBadge =
+    rawKey && !forceLocal
+      ? `<div style="margin-bottom:6px;"><span class="pill warn">Aviso Gemini (${
+          geminiErrorNotice || 'Verificá tu API Key'
+        }) · Respuesta calculada localmente:</span></div>`
+      : rawKey && forceLocal
+      ? `<div style="margin-bottom:6px;"><span class="pill pos">Resumen rápido inicial · Tocá cualquier botón de arriba o escribí abajo para consultar a Gemini IA en vivo</span></div>`
+      : `<div style="margin-bottom:6px;"><span class="pill">Motor local (Configurá tu API Gemini arriba para respuestas abiertas con IA)</span></div>`;
 
   const q = question.toLowerCase();
   if (q.includes('rentable') || q.includes('ganancia') || q.includes('producto') || q.includes('margen')) {
@@ -2923,10 +2941,15 @@ function recalcModalRecipeCost() {
 document.addEventListener('DOMContentLoaded', () => {
   setupEvents();
   renderAll();
-  askAdvisor('¿Qué productos me dejan más y menos ganancia hoy?');
+  askAdvisor('¿Qué productos me dejan más y menos ganancia hoy?', true);
+  if (state.meta.geminiApiKey) {
+    discoverAvailableGeminiModels(state.meta.geminiApiKey.trim().replace(/^["']|["']$/g, '')).then(() => {
+      renderAdvisorScreen();
+    });
+  }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=6').catch(() => {});
   }
 
   window.addEventListener('offline', () => {
