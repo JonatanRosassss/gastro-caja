@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastro-caja-offline-v8';
+const CACHE_NAME = 'gastro-caja-offline-v9';
 const ASSETS = [
   './',
   './index.html',

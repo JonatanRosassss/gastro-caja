@@ -50,7 +50,8 @@ export function loadState() {
     const merged = { ...initial, ...parsed, meta: { ...initial.meta, ...(parsed.meta || {}) } };
     if (savedGeminiKey && !merged.meta.geminiApiKey) merged.meta.geminiApiKey = savedGeminiKey;
     if (savedGeminiModel && !merged.meta.geminiModel) merged.meta.geminiModel = savedGeminiModel;
-    if (savedFirebaseUrl && !merged.meta.firebaseUrl) merged.meta.firebaseUrl = savedFirebaseUrl;
+    if (savedFirebaseUrl) merged.meta.firebaseUrl = savedFirebaseUrl;
+    if (!merged.meta.firebaseUrl) merged.meta.firebaseUrl = initial.meta.firebaseUrl;
     return merged;
   } catch (e) {
     return initial;

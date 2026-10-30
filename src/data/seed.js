@@ -12,7 +12,7 @@ export function getInitialState() {
       rentMyGoal: 220000,
       lightTotalReal: 270000,
       lightMyGoal: 150000,
-      firebaseUrl: '',
+      firebaseUrl: 'https://soberano-f1e4b-default-rtdb.firebaseio.com',
       geminiApiKey: '',
       lastUpdated: Date.now()
     },
