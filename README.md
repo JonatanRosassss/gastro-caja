@@ -1,7 +1,8 @@
 # Caja & Cocina — Libro Mayor Gastronómico (Documentación Maestra para Agentes y Desarrolladores)
 
 > **IMPORTANTE PARA CUALQUIER AGENTE DE IA / NUEVO CHAT EN ANTIGRAVITY:**
-> Este documento contiene el contexto real del negocio, la arquitectura funcional, el modelo contable, los datos reales de Octubre 2026, el flujo de usuario (UX) y las reglas estrictas del sistema de diseño (`achromatic-ledger` / `taste-skill` / `impeccable`). **Leé este archivo completo antes de modificar cualquier línea de código.**
+> 1. **Antes de tocar código, leé [`CONVENTIONS.md`](file:///c:/Users/Chouni/.gemini/antigravity/scratch/gastro-caja/CONVENTIONS.md)**: ahí está el mapa exacto de archivos por responsabilidad (Arquitectura en 3 Capas en `src/`) para que modifiques únicamente el módulo afectado sin leer todo el proyecto.
+> 2. Este `README.md` contiene el contexto real del negocio, el modelo contable de los 3 bolsillos, los datos reales de Octubre 2026 y las reglas estrictas del sistema de diseño (`achromatic-ledger` / `taste-skill` / `impeccable`).
 
 ---
 
@@ -24,13 +25,13 @@
 
 ---
 
-## 2. Arquitectura y Despliegue
+## 2. Arquitectura en 3 Capas y Despliegue (Ver [`CONVENTIONS.md`](file:///c:/Users/Chouni/.gemini/antigravity/scratch/gastro-caja/CONVENTIONS.md))
 
 - **Directorio del proyecto:** `C:\Users\Chouni\.gemini\antigravity\scratch\gastro-caja`
 - **Repositorio GitHub:** `https://github.com/JonatanRosassss/gastro-caja` (rama `main`)
 - **URL en producción (GitHub Pages):** `https://jonatanrosassss.github.io/gastro-caja/`
-- **Stack técnico:** HTML5 + CSS3 Vanilla (`styles.css`) + JavaScript Vanilla (`app.js`, `charts.js`) + Service Worker Offline-First (`sw.js`) + Web App Manifest (`manifest.json`). Sin dependencias pesadas ni frameworks que requieran build step.
-- **Sincronización en tiempo real con respaldo Offline-First:** El local cuenta con Wi-Fi, por lo que la aplicación sincroniza en tiempo real entre celulares y PC mediante stream nativo (`EventSource` sobre la API REST de Firebase Realtime Database, sin SDKs pesados). Cualquier venta, gasto o cambio de precio anotado en un dispositivo se refleja de inmediato en los demás. Si se corta el Wi-Fi, sigue funcionando 100% offline guardando en `localStorage` (`STORAGE_KEY = 'gastro_caja_octubre_real_v1'`) y sincroniza automáticamente las diferencias al volver la conexión, con soporte de exportación/importación `.json`.
+- **Stack técnico:** HTML5 + CSS3 Vanilla (`styles.css`) + **JavaScript Modular ES (`src/main.js` dividido en 3 capas: `src/domain/`, `src/data/` y `src/ui/`)** + Primitivas SVG (`charts.js`) + Service Worker Offline-First (`sw.js`) + Web App Manifest (`manifest.json`). Sin dependencias pesadas ni frameworks que requieran build step.
+- **Sincronización en tiempo real con respaldo Offline-First:** El local cuenta con Wi-Fi, por lo que la aplicación sincroniza en tiempo real entre celulares y PC mediante stream nativo (`EventSource` sobre la API REST de Firebase Realtime Database en `src/data/cloudSync.js`, sin SDKs pesados). Cualquier venta, gasto o cambio de precio anotado en un dispositivo se refleja de inmediato en los demás. Si se corta el Wi-Fi, sigue funcionando 100% offline guardando en `localStorage` (`STORAGE_KEY = 'gastro_caja_octubre_real_v1'` en `src/data/store.js`) y sincroniza automáticamente las diferencias al volver la conexión, con soporte de exportación/importación `.json`.
 
 ---
 
@@ -38,7 +39,7 @@
 
 El objetivo central de Jonatan es saber **cuánta plata limpia le queda realmente para gastar o invertir sin comerse la plata que necesita para reponer la mercadería**.
 
-En `getMetricsForPeriod(period, refDateStr)` dentro de `app.js`, la contabilidad se divide en **3 bolsillos estrictos**:
+En `getMetricsForPeriod(state, period, refDateStr)` dentro de `src/domain/ledger.js`, la contabilidad se divide en **3 bolsillos estrictos**:
 
 1. **Caja Bruta Vendida (`grossSales`):**
    Suma total de todas las tandas/cierres de venta del período.
@@ -183,14 +184,14 @@ Siempre que otro agente realice cambios en este proyecto, debe ejecutar los dos 
 
 ```powershell
 # 1. Linter estático de código (verifica cero emojis, sombras prohibidas o patrones slop)
-node "C:\Users\Chouni\.gemini\config\skills\taste-skill\scripts\lint.mjs" --app index.html styles.css app.js
+node "C:\Users\Chouni\.gemini\config\skills\taste-skill\scripts\lint.mjs" --app index.html styles.css charts.js src
 
 # 2. Inspector visual en navegador real (verifica renders en 1440px, 768px y 390px)
 node "C:\Users\Chouni\.gemini\config\skills\taste-skill\scripts\inspect.mjs" --app index.html
 ```
 
 Y luego de verificar:
-1. Incrementar la versión de `CACHE_NAME` en `sw.js` (ej. `'gastro-caja-offline-v7'`) y el parámetro `?v=X` en `index.html` para que los celulares actualicen al instante.
+1. Incrementar la versión de `CACHE_NAME` en `sw.js` (ej. `'gastro-caja-offline-v8'`) y el parámetro `?v=X` en `index.html` para que los celulares actualicen al instante.
 2. Borrar la carpeta temporal `.taste-skill` y subir a GitHub Pages:
    ```powershell
    Remove-Item -Recurse -Force .taste-skill -ErrorAction SilentlyContinue

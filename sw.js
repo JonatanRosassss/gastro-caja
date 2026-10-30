@@ -1,12 +1,29 @@
-const CACHE_NAME = 'gastro-caja-offline-v7';
+const CACHE_NAME = 'gastro-caja-offline-v8';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
-  './app.js',
   './charts.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './src/main.js',
+  './src/domain/formatters.js',
+  './src/domain/costing.js',
+  './src/domain/classifier.js',
+  './src/domain/ledger.js',
+  './src/data/seed.js',
+  './src/data/store.js',
+  './src/data/cloudSync.js',
+  './src/data/geminiClient.js',
+  './src/ui/toast.js',
+  './src/ui/headerKpisView.js',
+  './src/ui/overviewView.js',
+  './src/ui/expensesView.js',
+  './src/ui/costsView.js',
+  './src/ui/notesView.js',
+  './src/ui/advisorView.js',
+  './src/ui/syncModalView.js',
+  './src/ui/navigation.js'
 ];
 
 self.addEventListener('install', event => {
