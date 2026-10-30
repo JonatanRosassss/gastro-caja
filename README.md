@@ -30,7 +30,7 @@
 - **Repositorio GitHub:** `https://github.com/JonatanRosassss/gastro-caja` (rama `main`)
 - **URL en producción (GitHub Pages):** `https://jonatanrosassss.github.io/gastro-caja/`
 - **Stack técnico:** HTML5 + CSS3 Vanilla (`styles.css`) + JavaScript Vanilla (`app.js`, `charts.js`) + Service Worker Offline-First (`sw.js`) + Web App Manifest (`manifest.json`). Sin dependencias pesadas ni frameworks que requieran build step.
-- **Requisito Offline-First obligatorio:** En el local gastronómico **no tienen Wi-Fi fijo**. La aplicación debe funcionar 100% offline desde el celular guardando en `localStorage` (`STORAGE_KEY = 'gastro_caja_octubre_real_v1'`), con respaldo opcional a Firebase Realtime Database y exportación/importación `.json`.
+- **Sincronización en tiempo real con respaldo Offline-First:** El local cuenta con Wi-Fi, por lo que la aplicación sincroniza en tiempo real entre celulares y PC mediante stream nativo (`EventSource` sobre la API REST de Firebase Realtime Database, sin SDKs pesados). Cualquier venta, gasto o cambio de precio anotado en un dispositivo se refleja de inmediato en los demás. Si se corta el Wi-Fi, sigue funcionando 100% offline guardando en `localStorage` (`STORAGE_KEY = 'gastro_caja_octubre_real_v1'`) y sincroniza automáticamente las diferencias al volver la conexión, con soporte de exportación/importación `.json`.
 
 ---
 

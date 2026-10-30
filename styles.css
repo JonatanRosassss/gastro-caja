@@ -805,6 +805,21 @@ th.n, td.n {
 .pill.neg { background: var(--pill-negative-bg); color: var(--pill-negative-ink); }
 .pill.warn { background: var(--pill-warning-bg); color: var(--pill-warning-ink); }
 
+/* ---------- SYNC STATUS (nube en vivo) ---------- */
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--faint);
+}
+
+.sync-btn[data-sync="live"] .sync-dot { background: var(--positive); }
+.sync-btn[data-sync="saving"] .sync-dot,
+.sync-btn[data-sync="connecting"] .sync-dot { background: var(--warning); }
+.sync-btn[data-sync="offline"] .sync-dot,
+.sync-btn[data-sync="error"] .sync-dot { background: var(--negative); }
+
 /* ---------- SEVER INLINE BAR ---------- */
 .sever-controls-row {
   display: flex;

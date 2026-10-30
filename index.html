@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <!-- MOBILE HEADER (ONLY VISIBLE <= 860px) -->
@@ -23,8 +23,9 @@
       <span>Menú</span>
     </button>
     <span class="mobile-bar-title">Caja &amp; Cocina</span>
-    <button type="button" class="btn btn-sm" id="btnMobileSync" aria-label="Sincronizar datos">
-      <span>Nube</span>
+    <button type="button" class="btn btn-sm sync-btn" id="btnMobileSync" aria-label="Sincronizar datos" data-sync="off">
+      <span class="sync-dot" aria-hidden="true"></span>
+      <span class="sync-label">Nube</span>
     </button>
   </header>
 
@@ -119,7 +120,10 @@
             <span class="avatar-initial partner" title="Benja">B</span>
             <span>Jonatan y Benja</span>
           </div>
-          <button type="button" class="btn btn-sm" id="btnOpenSyncModal">Sincronizar</button>
+          <button type="button" class="btn btn-sm sync-btn" id="btnOpenSyncModal" data-sync="off">
+            <span class="sync-dot" aria-hidden="true"></span>
+            <span class="sync-label">Sincronizar</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -647,6 +651,7 @@
         <button type="button" class="btn btn-sm" id="btnCloseSyncModal">Cerrar</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px;">
+        <p class="meta" id="syncStatusDetail" aria-live="polite">Sin conectar. Los datos quedan solo en este dispositivo.</p>
         <div class="field">
           <label for="inputFirebaseUrl">URL de Firebase Realtime Database (Sincronización en vivo con tu hermano)</label>
           <div style="display:flex; gap:8px;">
@@ -655,8 +660,8 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" id="btnSyncPush">Subir mis datos a la nube</button>
-          <button type="button" class="btn btn-sm" id="btnSyncPull">Traer datos de la nube</button>
+          <button type="button" class="btn btn-sm" id="btnSyncPush">Forzar: la nube queda como este dispositivo</button>
+          <button type="button" class="btn btn-sm" id="btnSyncPull">Forzar: este dispositivo queda como la nube</button>
         </div>
         <div style="border-top:1px solid var(--border); padding-top:12px;">
           <p class="meta" style="margin-bottom:8px;">Respaldo manual por archivo (para enviar por WhatsApp)</p>
@@ -674,7 +679,7 @@
 
   <div class="toast-region" id="toastRegion" aria-live="polite"></div>
 
-  <script src="charts.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="charts.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
